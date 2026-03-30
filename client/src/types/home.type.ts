@@ -3,13 +3,13 @@ export type Sensor = {
   value: number;
   unit: string;
   online: boolean;
-  lastSeen: Date;
+  lastSeen: number;
 }
 export type Door = {
   name: string;
-  state: string;
+  state: "open" | "closed";
   online: boolean;
-  lastSeen: Date;
+  lastSeen: number;
 }
 export type Alarm = {
   armed: boolean;
@@ -17,7 +17,7 @@ export type Alarm = {
 }
   export type HomeState = {
   homeId: string;
-  updatedAt: Date;
+  updatedAt: number;
   sensors: Record<string, Sensor>;
   security: {
     door_main: Door;

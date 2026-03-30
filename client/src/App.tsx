@@ -1,48 +1,58 @@
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import "./App.css";
 import SensorCard from "./components/SensorCard";
 import type {Alert, HomeState} from "./types/home.type";
 import {io} from "socket.io-client";
 import {SecurityCard} from "./components/SecurityCard";
 import {AlertsFeed} from "./components/AlertsFeed";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {fetchHomeState} from "./api/homeApi";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
 
 function App() {
-  const [home, setHome] = useState<HomeState | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchHome = async () => {
-      const response = await fetch(`${API_URL}/api/home/123/state`);
-      const data = await response.json();
-      setHome(data);
-    };
+  const homeId = "123";
 
-    fetchHome();
-  }, []);
+  const {
+    data: home,
+    isLoading,
+    isError,
+  } = useQuery<HomeState>({
+    queryKey: ["homeState", homeId],
+    queryFn: () => fetchHomeState(homeId),
+  });
 
   useEffect(() => {
     const socket = io(WS_URL);
     // subskrypcja na aktualizację stanu domu
-    socket.emit("subscribe:home", "123");
+    socket.emit("subscribe:home", homeId);
     // nasłuchiwanie na aktualizację stanu domu
     socket.on("home:update", (data: HomeState) => {
-      setHome(data);
-      setAlerts(data.alerts ?? []);
+      queryClient.setQueryData<HomeState>(["homeState", homeId], data);
     });
     // nasłuchiwanie na nowe alerty
     socket.on("alert:new", (alert: Alert) => {
-      setAlerts((prev) => [alert, ...prev].slice(0, 20));
+      queryClient.setQueryData<HomeState>(["homeState", homeId], (prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          alerts: [alert, ...prev.alerts].slice(0, 20),
+        };
+      });
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [queryClient, homeId]);
 
-  if (!home) return <div>Loading...</div>;
+  if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
+  if (isError || !home)
+    return <div style={{padding: 24}}>Error loading data</div>;
+
   return (
     <div className="container">
       <div className="header">
@@ -65,7 +75,7 @@ function App() {
           />
 
           <h2 className="panelTitle">Alerts</h2>
-          <AlertsFeed alerts={alerts} />
+          <AlertsFeed alerts={home.alerts} />
         </div>
       </div>
     </div>
