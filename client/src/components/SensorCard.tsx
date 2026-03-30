@@ -6,7 +6,7 @@ type SensorCardProps = {
 
 const SensorCard = ({sensor}: SensorCardProps) => {
   return (
-    <div className="card" key={sensor.id}>
+    <div className="card" >
       <header
         style={{
           display: "flex",

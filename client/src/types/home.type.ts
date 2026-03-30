@@ -1,8 +1,27 @@
 export type Sensor = {
-  id: number;
   name: string;
   value: number;
   unit: string;
   online: boolean;
   lastSeen: Date;
-};
+}
+export type Door = {
+  name: string;
+  state: string;
+  online: boolean;
+  lastSeen: Date;
+}
+export type Alarm = {
+  armed: boolean;
+  triggered: boolean;
+}
+  export type HomeState = {
+  homeId: string;
+  updatedAt: Date;
+  sensors: Record<string, Sensor>;
+  security: {
+    door_main: Door;
+    alarm: Alarm;
+  };
+  alerts: any[];
+}
