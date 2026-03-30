@@ -56,8 +56,12 @@ function App() {
   return (
     <div className="container">
       <div className="header">
-        <h1 className="h1">SmartHome Control Center</h1>
-        <p className="sub">Realtime IoT Dashboard • WebSocket • React Query</p>
+        <div>
+          <h1 className="h1">SmartHome Control Center</h1>
+          <p className="sub">
+            Realtime IoT Dashboard • WebSocket • React Query
+          </p>
+        </div>
       </div>
 
       <div className="grid">
@@ -68,14 +72,19 @@ function App() {
               <SensorCard key={id} sensor={sensor} />
             ))}
           </div>
-          <h2 className="panelTitle">Security</h2>
-          <SecurityCard
-            door={home.security.door_main}
-            alarm={home.security.alarm}
-          />
-
-          <h2 className="panelTitle">Alerts</h2>
-          <AlertsFeed alerts={home.alerts} />
+        </div>
+        <div style={{display: "grid", gap: 16}}>
+          <div className="panel">
+            <h2 className="panelTitle">Security</h2>
+            <SecurityCard
+              door={home.security.door_main}
+              alarm={home.security.alarm}
+            />
+          </div>
+          <div className="panel">
+            <h2 className="panelTitle">Alerts</h2>
+            <AlertsFeed alerts={home.alerts} />
+          </div>
         </div>
       </div>
     </div>

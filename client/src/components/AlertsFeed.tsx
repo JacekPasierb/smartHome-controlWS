@@ -15,7 +15,7 @@ export function AlertsFeed({alerts}: {alerts: Alert[]}) {
         alerts.map((a) => (
           <div
             key={a.id}
-            style={{border: "1px solid #ddd", padding: 10, borderRadius: 8}}
+            className="card"
           >
             <div style={{fontWeight: 600}}>
               {icon(a.severity)} {a.message}
