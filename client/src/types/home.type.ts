@@ -23,5 +23,13 @@ export type Alarm = {
     door_main: Door;
     alarm: Alarm;
   };
-  alerts: any[];
+  alerts: Alert[];
+}
+
+export type Alert = {
+  id: string;
+  type: "TEMP_FRIDGE_HIGH" | "DOOR_OPEN_TOO_LONG";
+  message: string;
+  severity: "info" | "warning" | "critical";
+  createdAt: number;
 }

@@ -23,9 +23,14 @@ io.on("connection", (socket) => {
 });
 
 // start simulator przyjmuje callback który jest wywoływany kiedy stan domu się zmienia
-startSimulator((homeId) => {
-  io.to(`home:${homeId}`).emit("home:update", getHomeState(homeId));
-});
+startSimulator(
+  (homeId) => {
+    io.to(`home:${homeId}`).emit("home:update", getHomeState(homeId));
+  },
+  (homeId, alert) => {
+    io.to(`home:${homeId}`).emit("alert:new", alert);
+  }
+);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

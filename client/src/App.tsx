@@ -1,14 +1,15 @@
 import {useEffect, useState} from "react";
 import "./App.css";
 import SensorCard from "./components/SensorCard";
-import type {HomeState} from "./types/home.type";
-import { io } from "socket.io-client";
+import type {Alert, HomeState} from "./types/home.type";
+import {io} from "socket.io-client";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
-const WS_URL = import.meta.env.VITE_WS_URL as string || API_URL;
+const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
 
 function App() {
   const [home, setHome] = useState<HomeState | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     const fetchHome = async () => {
@@ -22,11 +23,16 @@ function App() {
 
   useEffect(() => {
     const socket = io(WS_URL);
-    
+    // subskrypcja na aktualizację stanu domu
     socket.emit("subscribe:home", "123");
-
+    // nasłuchiwanie na aktualizację stanu domu
     socket.on("home:update", (data: HomeState) => {
       setHome(data);
+      setAlerts(data.alerts ?? []);
+    });
+    // nasłuchiwanie na nowe alerty
+    socket.on("alert:new", (alert: Alert) => {
+      setAlerts((prev) => [alert, ...prev].slice(0, 20));
     });
 
     return () => {
@@ -60,6 +66,36 @@ function App() {
                 ? "🚪 Open"
                 : "🔒 Closed"}
             </div>
+          </div>
+
+          <h2 className="panelTitle">Alerts</h2>
+          <div style={{display: "grid", gap: 8}}>
+            {alerts.length === 0 ? (
+              <div style={{opacity: 0.7}}>Brak alertów</div>
+            ) : (
+              alerts.map((a) => (
+                <div
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: 10,
+                    borderRadius: 8,
+                  }}
+                >
+                  <div style={{fontWeight: 600}}>
+                    {a.severity === "critical"
+                      ? "🚨"
+                      : a.severity === "warning"
+                      ? "⚠️"
+                      : "ℹ️"}
+                    {""}
+                    {a.message}
+                  </div>
+                  <div style={{fontSize: 12, opacity: 0.7}}>
+                    {new Date(a.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <div
