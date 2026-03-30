@@ -2,21 +2,36 @@ import {useEffect, useState} from "react";
 import "./App.css";
 import SensorCard from "./components/SensorCard";
 import type {HomeState} from "./types/home.type";
+import { io } from "socket.io-client";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
+const WS_URL = import.meta.env.VITE_WS_URL as string || API_URL;
+
 function App() {
   const [home, setHome] = useState<HomeState | null>(null);
 
   useEffect(() => {
     const fetchHome = async () => {
       const response = await fetch(`${API_URL}/api/home/123/state`);
-
       const data = await response.json();
-
       setHome(data);
     };
 
     fetchHome();
+  }, []);
+
+  useEffect(() => {
+    const socket = io(WS_URL);
+    
+    socket.emit("subscribe:home", "123");
+
+    socket.on("home:update", (data: HomeState) => {
+      setHome(data);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   if (!home) return <div>Loading...</div>;
@@ -57,7 +72,9 @@ function App() {
           >
             <strong>Alarm</strong>
             <div>{home.security.alarm.armed ? "⚱️ Armed" : "🔴 Disarmed"}</div>
-            {home.security.alarm.triggered && <div style={{color:"red"}}>🚨 Alarm triggered</div>}
+            {home.security.alarm.triggered && (
+              <div style={{color: "red"}}>🚨 Alarm triggered</div>
+            )}
           </div>
         </div>
       </div>

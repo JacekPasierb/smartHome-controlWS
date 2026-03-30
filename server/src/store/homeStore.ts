@@ -103,7 +103,12 @@ function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-export function startSimulator() {
+function updated(onUpdate?: (homeId: string) => void) {
+  homeState.updatedAt = now();
+  onUpdate?.(homeState.homeId);
+}
+
+export function startSimulator(onUpdate?: (homeId: string) => void) {
   setInterval(() => {
     const t = homeState.sensors;
     t.temp_fridge.value = Number(rand(2, 8).toFixed(1));
@@ -121,7 +126,8 @@ export function startSimulator() {
     t.power_total.value = Number(rand(0, 1000).toFixed(1));
     t.power_total.lastSeen = now();
 
-    homeState.updatedAt = now();
+      // wywołanie callback kiedy stan domu się zmienia (wysyłanie snapshotu do klienta)
+    updated(onUpdate);
   }, 3000);
 
   // drzwi czasem się otwierają i zamykają
@@ -130,8 +136,9 @@ export function startSimulator() {
     if (Math.random() < 0.3) {
       door.state = door.state === "open" ? "closed" : "open";
 
-      door.lastSeen = now();
-      homeState.updatedAt = now();
+        door.lastSeen = now();
+        // wywołanie callback kiedy stan domu się zmienia (wysyłanie snapshotu do klienta)
+      updated(onUpdate);
     }
   }, 5000);
 
@@ -140,8 +147,9 @@ export function startSimulator() {
     const alarm = homeState.security.alarm;
     if (Math.random() < 0.15) {
       alarm.armed = !alarm.armed;
-      if (alarm.armed) alarm.triggered = false;
-      homeState.updatedAt = now();
+        if (alarm.armed) alarm.triggered = false;
+        // wywołanie callback kiedy stan domu się zmienia (wysyłanie snapshotu do klienta)
+      updated(onUpdate);
     }
   }, 8000);
 }
