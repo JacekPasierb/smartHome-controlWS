@@ -38,6 +38,10 @@ export function LiveChart({title, value}: Props) {
 
   const last = data[data.length - 1]?.value;
 
+  const values = data.map((p) => p.value);
+  const min = values.length ? Math.min(...values) : value;
+  const max = values.length ? Math.max(...values) : value;
+
   if (last !== value) {
     dispatch({type: "push", value});
   }
@@ -46,7 +50,7 @@ export function LiveChart({title, value}: Props) {
     <div className="card">
       <div style={{display: "flex", justifyContent: "space-between", gap: 10}}>
         <strong>{title}</strong>
-        <span className="muted">{value}</span>
+        <span className="muted">min {min.toFixed(1)} • max {max.toFixed(1)}</span>
       </div>
 
       <div style={{height: 220, marginTop: 12}}>
