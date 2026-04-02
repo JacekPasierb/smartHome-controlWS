@@ -207,11 +207,19 @@ export function startSimulator(
   // alarm czasem uzbrojenie i rozbrojenie
   setInterval(() => {
     const alarm = homeState.security.alarm;
-    if (Math.random() < 0.15) {
+    const door = homeState.security.door_main;
+
+    if (Math.random() < 0.35) {
       alarm.armed = !alarm.armed;
-      if (alarm.armed) alarm.triggered = false;
-      // wywołanie callback kiedy stan domu się zmienia (wysyłanie snapshotu do klienta)
-      updated(onUpdate);
+
+      if (!alarm.armed) alarm.triggered = false;
     }
+    // jeśli alarm uzbrojony i drzwi open => czasem triggeer
+    if (alarm.armed && door.state === "open" && Math.random() < 0.5) {
+      alarm.triggered = true;
+    }
+
+    homeState.updatedAt = now();
+    onUpdate?.(homeState.homeId);
   }, 8000);
 }
