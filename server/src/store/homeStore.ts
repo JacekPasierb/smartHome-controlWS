@@ -106,6 +106,14 @@ let homeState: HomeState = {
 export const getHomeState = (homeId: string): HomeState => {
   return homeState;
 };
+
+export function setAlarmArmed(homeId: string, armed: boolean) {
+  homeState.security.alarm.armed = armed;
+  if (!armed) homeState.security.alarm.triggered = false;
+  homeState.updatedAt = now();
+  return homeState;
+}
+
 // helper function to generate random number between min and max
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
