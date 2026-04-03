@@ -37,6 +37,7 @@ function App() {
   // socket
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const currentHomeIdRef = useRef<HomeId>(homeId);
+  const prevHomeIdRef = useRef<HomeId>(homeId);
 
   useEffect(() => {
     currentHomeIdRef.current = homeId;
@@ -130,9 +131,7 @@ function App() {
       queryClient.setQueryData<HomeState>(["homeState", data.homeId], data);
     };
 
-    const onAlert = (payload:{homeId: string, alert: Alert}) => {
-      
-
+    const onAlert = (payload: {homeId: string; alert: Alert}) => {
       queryClient.setQueryData<HomeState>(
         ["homeState", payload.homeId],
         (prev) => {
@@ -174,12 +173,19 @@ function App() {
   useEffect(() => {
     queryClient.invalidateQueries({queryKey: ["homeState", homeId]});
     const socket = socketRef.current;
-    if (!socket) return;
+    if (!socket) {
+      prevHomeIdRef.current = homeId;
+      return;
+    };
+    const prevHomeId = prevHomeIdRef.current;
+    if (socket.connected && prevHomeId !== homeId) {
+      socket.emit("unsubscribe:home", prevHomeId);
+    }
 
-    if (socket?.connected) {
+    if (socket.connected) {
       socket.emit("subscribe:home", homeId);
     }
-    // socket.emit("unsubscribe:home", homeId);
+    prevHomeIdRef.current = homeId;
   }, [homeId, queryClient]);
 
   if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
@@ -216,9 +222,7 @@ function App() {
           <select
             className="select"
             value={homeId}
-            onChange={(e) =>
-              setHomeId(e.target.value as HomeId)
-            }
+            onChange={(e) => setHomeId(e.target.value as HomeId)}
             title="Choose home"
           >
             {HOMES.map((home) => (

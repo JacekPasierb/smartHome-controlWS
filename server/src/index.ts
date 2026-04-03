@@ -20,6 +20,9 @@ io.on("connection", (socket) => {
     // wysłanie snapshot zaraz po  subskrypcji
     socket.emit("home:update", getHomeState(homeId));
   });
+  socket.on("unsubscribe:home", (homeId: string) => {
+    socket.leave(`home:${homeId}`);
+  });
 });
 
 // start simulator przyjmuje callback który jest wywoływany kiedy stan domu się zmienia
