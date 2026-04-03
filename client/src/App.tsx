@@ -1,16 +1,13 @@
 import {useEffect, useRef, useState} from "react";
 import "./App.css";
 import SensorCard from "./components/SensorCard";
-import type {Alert, HomeState} from "./types/home.type";
-import {io} from "socket.io-client";
+import type {HomeState} from "./types/home.type";
 import {SecurityCard} from "./components/SecurityCard";
 import {AlertsFeed} from "./components/AlertsFeed";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchHomeState, setAlarm} from "./api/homeApi";
 import {LiveChart} from "./components/LiveCharts";
-
-const API_URL = import.meta.env.VITE_API_URL as string;
-const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
+import {useHomeSocket} from "./hooks/useHomeSocket";
 
 const HOMES = [
   {id: "123", label: "Home A (123)"},
@@ -18,7 +15,6 @@ const HOMES = [
 ] as const;
 
 type HomeId = (typeof HOMES)[number]["id"];
-type WsStatus = "connecting" | "online" | "offline";
 type ChartSensorId = "temp_fridge" | "temp_balcony" | "temp_room";
 
 function App() {
@@ -27,21 +23,17 @@ function App() {
   const [homeId, setHomeId] = useState<HomeId>("123");
   const [chartSensorId, setChartSensorId] =
     useState<ChartSensorId>("temp_fridge");
-  const [wsStatus, setWsStatus] = useState<WsStatus>("connecting");
+
+  const { wsStatus } = useHomeSocket(homeId, queryClient);
+  const wsStatusColor = wsStatus === "online" ? "green" : wsStatus === "connecting" ? "gold" : "red";
+  const wsStatusText = wsStatus === "online" ? "Realtime: Connected" : wsStatus === "connecting" ? "Realtime: Connecting..." : "Realtime:Disconnected";
+  
+  
 
   // audio
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevTriggeredRef = useRef<boolean>(false);
-
-  // socket
-  const socketRef = useRef<ReturnType<typeof io> | null>(null);
-  const currentHomeIdRef = useRef<HomeId>(homeId);
-  const prevHomeIdRef = useRef<HomeId>(homeId);
-
-  useEffect(() => {
-    currentHomeIdRef.current = homeId;
-  }, [homeId]);
 
   const {
     data: home,
@@ -103,104 +95,21 @@ function App() {
     },
   });
 
-  // create socket once
-  useEffect(() => {
-    const socket = io(WS_URL, {
-      transports: ["websocket"],
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 700,
-    });
-
-    socketRef.current = socket;
-
-    const subscribeCurrent = () => {
-      socket.emit("subscribe:home", currentHomeIdRef.current);
-    };
-
-    const onConnect = () => {
-      setWsStatus("online");
-      subscribeCurrent();
-    };
-
-    const OnDisconnect = () => setWsStatus("offline");
-
-    const OnConnectError = () => setWsStatus("offline");
-
-    const OnHomeUpdate = (data: HomeState) => {
-      queryClient.setQueryData<HomeState>(["homeState", data.homeId], data);
-    };
-
-    const onAlert = (payload: {homeId: string; alert: Alert}) => {
-      queryClient.setQueryData<HomeState>(
-        ["homeState", payload.homeId],
-        (prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            alerts: [payload.alert, ...prev.alerts].slice(0, 20),
-          };
-        }
-      );
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", OnDisconnect);
-    socket.on("connect_error", OnConnectError);
-    socket.on("home:update", OnHomeUpdate);
-    socket.on("alert:new", onAlert);
-
-    socket.io.on("reconnect_attempt", () => {
-      setWsStatus("connecting");
-    });
-
-    socket.io.on("reconnect", () => {
-      setWsStatus("online");
-      subscribeCurrent();
-    });
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", OnDisconnect);
-      socket.off("connect_error", OnConnectError);
-      socket.off("home:update", OnHomeUpdate);
-      socket.off("alert:new", onAlert);
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [queryClient]);
-
-  useEffect(() => {
-    queryClient.invalidateQueries({queryKey: ["homeState", homeId]});
-    const socket = socketRef.current;
-    if (!socket) {
-      prevHomeIdRef.current = homeId;
-      return;
-    };
-    const prevHomeId = prevHomeIdRef.current;
-    if (socket.connected && prevHomeId !== homeId) {
-      socket.emit("unsubscribe:home", prevHomeId);
-    }
-
-    if (socket.connected) {
-      socket.emit("subscribe:home", homeId);
-    }
-    prevHomeIdRef.current = homeId;
-  }, [homeId, queryClient]);
-
   if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
   if (isError || !home)
     return <div style={{padding: 24}}>Error loading data</div>;
 
   return (
     <div className="container">
-      <div className="header">
+      <div className="header" >
         <div>
           <h1 className="h1">SmartHome Control Center</h1>
+
           <p className="sub">
             Realtime IoT Dashboard • WebSocket • React Query
           </p>
         </div>
+        
 
         <div style={{display: "flex", gap: 10, alignItems: "center"}}>
           <button
@@ -241,11 +150,7 @@ function App() {
                   : "dot-offline"
               }`}
             />
-            {wsStatus === "online"
-              ? "Realtime: connected"
-              : wsStatus === "connecting"
-              ? "Realtime: connecting..."
-              : "Realtime: disconnected"}
+            {wsStatusColor === "green" ? "🟢" : wsStatusColor === "gold" ? "🟡" : "🔴"} {wsStatusText}
           </div>
         </div>
       </div>

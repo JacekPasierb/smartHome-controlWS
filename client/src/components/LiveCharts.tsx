@@ -14,7 +14,7 @@ type Point = {
   value: number;
 };
 
-type Props = {
+type LiveChartProps = {
   title: string;
   value: number;
 };
@@ -33,7 +33,7 @@ function reducer(state: Point[], action: Action): Point[] {
   return next.filter((p)=>ts-p.t<=60_000)
 }
 
-export function LiveChart({title, value}: Props) {
+export function LiveChart({title, value}: LiveChartProps) {
   const [data, dispatch] = useReducer(reducer, []);
 
   const last = data[data.length - 1]?.value;

@@ -1,11 +1,5 @@
 import type {Alert} from "../types/home.type";
 
-// function icon(severity: Alert["severity"]) {
-//   if (severity === "critical") return "🚨";
-//   if (severity === "warning") return "⚠️";
-//   return "ℹ️";
-// }
-
 type AlertsFeedProps = {
   alerts: Alert[];
 };
