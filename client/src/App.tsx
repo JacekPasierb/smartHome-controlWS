@@ -18,6 +18,9 @@ function App() {
     "temp_fridge" | "temp_balcony" | "temp_room"
   >("temp_fridge");
 
+  const [wsStatus, setWsStatus] = useState<"connecting" | "online" | "offline">(
+    "connecting"
+  );
   const homeId = "123";
 
   const {
@@ -62,14 +65,31 @@ function App() {
   });
 
   useEffect(() => {
-    const socket = io(WS_URL);
-    // subskrypcja na aktualizację stanu domu
-    socket.emit("subscribe:home", homeId);
-    // nasłuchiwanie na aktualizację stanu domu
+    const socket = io(WS_URL, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 700,
+    });
+
+    setWsStatus("connecting");
+
+    socket.on("connect", () => {
+      setWsStatus("online");
+      socket.emit("subscribe:home", homeId);
+    });
+    socket.on("disconnect", () => {
+      setWsStatus("offline");
+    });
+
+    socket.on("connect_error", () => {
+      setWsStatus("offline");
+    });
+
     socket.on("home:update", (data: HomeState) => {
       queryClient.setQueryData<HomeState>(["homeState", homeId], data);
     });
-    // nasłuchiwanie na nowe alerty
+
     socket.on("alert:new", (alert: Alert) => {
       queryClient.setQueryData<HomeState>(["homeState", homeId], (prev) => {
         if (!prev) return prev;
@@ -80,9 +100,7 @@ function App() {
       });
     });
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, [queryClient, homeId]);
 
   if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
@@ -97,6 +115,22 @@ function App() {
           <p className="sub">
             Realtime IoT Dashboard • WebSocket • React Query
           </p>
+        </div>
+        <div className="badge">
+          <span
+            className={`dot-${
+              wsStatus === "online"
+                ? "dot-online"
+                : wsStatus === "connecting"
+                ? "dot-connecting"
+                : "dot-offline"
+            }`}
+          />
+          {wsStatus === "online"
+            ? "Realtime: connected"
+            : wsStatus === "connecting"
+            ? "Realtime: connecting..."
+            : "Realtime: disconnected"}
         </div>
       </div>
       {home.security.alarm.triggered ? (
@@ -152,14 +186,41 @@ function App() {
           </div>
           <div className="panel">
             <h2 className="panelTitle">Security</h2>
-            <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-              <button className="btn" onClick={() => alarmMutation.mutate(true)}
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                className="btn"
+                onClick={() => alarmMutation.mutate(true)}
                 disabled={alarmMutation.isPending || home.security.alarm.armed}
-              title={home.security.alarm.armed? " Alarm already armed" : "Arm Alarm"}>⚱️ Arm</button>
-              <button className="btn" onClick={() => alarmMutation.mutate(false)}
+                title={
+                  home.security.alarm.armed
+                    ? " Alarm already armed"
+                    : "Arm Alarm"
+                }
+              >
+                ⚱️ Arm
+              </button>
+              <button
+                className="btn"
+                onClick={() => alarmMutation.mutate(false)}
                 disabled={alarmMutation.isPending || !home.security.alarm.armed}
-                title={!home.security.alarm.armed ? " Alarm already disarmed" : "Disarm alarm"}>🔴 Disarm</button>
-              {alarmMutation.isPending && <span className="muted">⏳ Saving...</span>}
+                title={
+                  !home.security.alarm.armed
+                    ? " Alarm already disarmed"
+                    : "Disarm alarm"
+                }
+              >
+                🔴 Disarm
+              </button>
+              {alarmMutation.isPending && (
+                <span className="muted">⏳ Saving...</span>
+              )}
             </div>
             <SecurityCard
               door={home.security.door_main}
