@@ -11,6 +11,7 @@ import {LiveChart} from "./components/LiveCharts";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
+const HOME_ID = "123";
 
 function App() {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ function App() {
   const [wsStatus, setWsStatus] = useState<"connecting" | "online" | "offline">(
     "connecting"
   );
-  const homeId = "123";
+  const homeId = HOME_ID;
 
   const {
     data: home,
@@ -72,25 +73,20 @@ function App() {
       reconnectionDelay: 700,
     });
 
-    setWsStatus("connecting");
-
-    socket.on("connect", () => {
+   
+    const onConnect = () => {
       setWsStatus("online");
       socket.emit("subscribe:home", homeId);
-    });
-    socket.on("disconnect", () => {
-      setWsStatus("offline");
-    });
+    };
+    const OnDisconnect = () => setWsStatus("offline");
 
-    socket.on("connect_error", () => {
-      setWsStatus("offline");
-    });
+    const OnConnectError = () => setWsStatus("offline");
 
-    socket.on("home:update", (data: HomeState) => {
+    const OnHomeUpdate = (data: HomeState) => {
       queryClient.setQueryData<HomeState>(["homeState", homeId], data);
-    });
+    };
 
-    socket.on("alert:new", (alert: Alert) => {
+    const onAlert = (alert: Alert) => {
       queryClient.setQueryData<HomeState>(["homeState", homeId], (prev) => {
         if (!prev) return prev;
         return {
@@ -98,9 +94,26 @@ function App() {
           alerts: [alert, ...prev.alerts].slice(0, 20),
         };
       });
-    });
+    };
 
-    return () => socket.disconnect();
+    socket.on("connect", onConnect);
+    socket.on("disconnect", OnDisconnect);
+    socket.on("connect_error", OnConnectError);
+    socket.on("home:update", OnHomeUpdate);
+    socket.on("alert:new", onAlert);
+
+    socket.io.on("reconnect_attempt", () => {
+      setWsStatus("connecting");
+    })
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", OnDisconnect);
+      socket.off("connect_error", OnConnectError);
+      socket.off("home:update", OnHomeUpdate);
+      socket.off("alert:new", onAlert);
+      socket.disconnect();
+    };
   }, [queryClient, homeId]);
 
   if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
