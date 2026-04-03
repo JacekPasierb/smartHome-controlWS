@@ -11,7 +11,6 @@ import {LiveChart} from "./components/LiveCharts";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
-const HOME_ID = "123";
 
 function App() {
   const queryClient = useQueryClient();
@@ -27,7 +26,20 @@ function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevTriggeredRef = useRef<boolean>(false);
 
-  const homeId = HOME_ID;
+  // const homeId = HOME_ID;
+  const homes = [
+    {id: "123", label: "Home A (123)"},
+    {id: "456", label: "Home B (456)"},
+  ] as const;
+
+  const [homeId, setHomeId] = useState<(typeof homes)[number]["id"]>("123");
+
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
+  const currentHomeIdRef = useRef(homeId);
+
+  useEffect(() => {
+    currentHomeIdRef.current = homeId;
+  }, [homeId]);
 
   const {
     data: home,
@@ -95,20 +107,23 @@ function App() {
       reconnectionDelay: 700,
     });
 
+    socketRef.current = socket;
+
     const onConnect = () => {
       setWsStatus("online");
-      socket.emit("subscribe:home", homeId);
+      socket.emit("subscribe:home", currentHomeIdRef.current);
     };
+
     const OnDisconnect = () => setWsStatus("offline");
 
     const OnConnectError = () => setWsStatus("offline");
 
     const OnHomeUpdate = (data: HomeState) => {
-      queryClient.setQueryData<HomeState>(["homeState", homeId], data);
+      queryClient.setQueryData<HomeState>(["homeState", data.homeId], data);
     };
 
     const onAlert = (alert: Alert) => {
-      queryClient.setQueryData<HomeState>(["homeState", homeId], (prev) => {
+      queryClient.setQueryData<HomeState>(["homeState",currentHomeIdRef.current], (prev) => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -123,6 +138,11 @@ function App() {
     socket.on("home:update", OnHomeUpdate);
     socket.on("alert:new", onAlert);
 
+    socket.io.on("reconnect", () => {
+      setWsStatus("online");
+      socket.emit("subscribe:home", currentHomeIdRef.current);
+    });
+
     socket.io.on("reconnect_attempt", () => {
       setWsStatus("connecting");
     });
@@ -134,8 +154,20 @@ function App() {
       socket.off("home:update", OnHomeUpdate);
       socket.off("alert:new", onAlert);
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [queryClient, homeId]);
+  }, [queryClient]);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+    queryClient.invalidateQueries({queryKey: ["homeState", homeId]});
+
+    if(socket.connected) {
+      socket.emit("subscribe:home", homeId);
+    }
+    // socket.emit("unsubscribe:home", homeId);
+  }, [homeId, queryClient]);
 
   if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
   if (isError || !home)
@@ -168,6 +200,20 @@ function App() {
           >
             🔊 Test Alarm
           </button>
+          <select
+            className="select"
+            value={homeId}
+            onChange={(e) =>
+              setHomeId(e.target.value as (typeof homes)[number]["id"])
+            }
+            title="Choose home"
+          >
+            {homes.map((home) => (
+              <option key={home.id} value={home.id}>
+                {home.label}
+              </option>
+            ))}
+          </select>
           <div className="badge">
             <span
               className={`dot-${
