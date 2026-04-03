@@ -130,16 +130,16 @@ function App() {
       queryClient.setQueryData<HomeState>(["homeState", data.homeId], data);
     };
 
-    const onAlert = (alert: Alert) => {
-      const activeHomeId = currentHomeIdRef.current;
+    const onAlert = (payload:{homeId: string, alert: Alert}) => {
+      
 
       queryClient.setQueryData<HomeState>(
-        ["homeState", activeHomeId],
+        ["homeState", payload.homeId],
         (prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            alerts: [alert, ...prev.alerts].slice(0, 20),
+            alerts: [payload.alert, ...prev.alerts].slice(0, 20),
           };
         }
       );
