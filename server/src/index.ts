@@ -2,6 +2,9 @@ import http from "http";
 import app from "./app";
 import {getHomeState, startSimulator} from "./store/homeStore";
 import {Server} from "socket.io";
+import {setupSocket} from "./ws/setupSocket";
+import jwt from "jsonwebtoken";
+import type {Role} from "./auth/homeAccess";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
@@ -11,6 +14,22 @@ const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:5173",
   },
+});
+// setupSocket(io);
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token as string | undefined;
+  if (!token) return next(new Error("Unauthorized"));
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
+      sub: string;
+      role: Role;
+    };
+    (socket as any).user = {id: payload.sub, role: payload.role};
+    return next();
+  } catch {
+    next(new Error("Unauthorized"));
+  }
 });
 
 io.on("connection", (socket) => {

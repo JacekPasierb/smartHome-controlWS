@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import type {QueryClient} from "@tanstack/react-query";
 import {io} from "socket.io-client";
 import type {Alert, HomeState} from "../types/home.type";
+import {authStorage} from "../auth/authStorage";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
@@ -16,6 +17,9 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
   useEffect(() => {
     const socket = io(WS_URL, {
       transports: ["websocket"],
+      auth: {
+        token: authStorage.get(),
+      },
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 700,
@@ -24,6 +28,7 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
     socketRef.current = socket;
 
     const subscribe = (id: string) => socket.emit("subscribe:home", id);
+    const unsubscribe = (id: string) => socket.emit("unsubscribe:home", id);
 
     const onConnect = () => {
       setWsStatus("online");
@@ -53,7 +58,14 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("connect_error", onConnectError);
+    socket.on("connect_error", (err) => {
+      setWsStatus("offline");
+      if (err?.message === "Unauthorized") {
+        authStorage.clear();
+        // window.location.href = "/login";
+      }
+    });
+
     socket.on("home:update", onHomeUpdate);
     socket.on("alert:new", onAlert);
 
@@ -68,6 +80,10 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
     socket.io.on("reconnect", onReconnect);
 
     return () => {
+      if (socket.connected) {
+        unsubscribe(prevHomeIdRef.current);
+      }
+
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("connect_error", onConnectError);
