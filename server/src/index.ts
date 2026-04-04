@@ -16,7 +16,7 @@ const io = new Server(httpServer, {
   },
 });
 // setupSocket(io);
-
+// io.use mamy tez w ws/setupSocket.ts - do rozwiązania duplikat kodu
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token as string | undefined;
   if (!token) return next(new Error("Unauthorized"));
