@@ -1,6 +1,11 @@
-import type {Alarm, Door} from "../types/home.type";
+import type {Alarm, Door} from "../../../types/home";
 
-export function SecurityCard({door, alarm}: {door: Door; alarm: Alarm}) {
+type SecurityCardProps = {
+  door: Door;
+  alarm: Alarm;
+};
+
+export function SecurityCard({door, alarm}: SecurityCardProps) {
   return (
     <div style={{display: "grid", gap: 12}}>
       <div className="card">
@@ -25,7 +30,7 @@ export function SecurityCard({door, alarm}: {door: Door; alarm: Alarm}) {
           style={{display: "flex", justifyContent: "space-between", gap: 12}}
         >
           <strong>Alarm</strong>
-          <span>{alarm.armed ? "⚱️ armed" : "🔴 disarmed"}</span>
+          <span>{alarm.armed ? "🛡️ armed" : "🔴 disarmed"}</span>
         </div>
 
         {alarm.triggered && (

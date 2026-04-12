@@ -1,11 +1,10 @@
 import {useEffect, useRef, useState} from "react";
 import type {QueryClient} from "@tanstack/react-query";
 import {io} from "socket.io-client";
-import type {Alert, HomeState} from "../types/home.type";
-import {authStorage} from "../auth/authStorage";
-
-const API_URL = import.meta.env.VITE_API_URL as string;
-const WS_URL = (import.meta.env.VITE_WS_URL as string) || API_URL;
+import type {Alert, HomeState} from "../../../types/home";
+import {authStorage} from "../../auth/storage/authStorage";
+import {env} from "../../../lib/env";
+import {queryKeys} from "../../../lib/queryKeys";
 
 export type WsStatus = "connecting" | "online" | "offline";
 
@@ -15,10 +14,17 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
   const prevHomeIdRef = useRef(homeId);
 
   useEffect(() => {
-    const socket = io(WS_URL, {
+    const token = authStorage.getToken();
+
+    if (!token) {
+      setWsStatus("offline");
+      return;
+    }
+
+    const socket = io(env.wsUrl, {
       transports: ["websocket"],
       auth: {
-        token: authStorage.get(),
+        token,
       },
       reconnection: true,
       reconnectionAttempts: Infinity,
@@ -37,17 +43,19 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
 
     const onDisconnect = () => setWsStatus("offline");
 
-    const onConnectError = () => setWsStatus("offline");
-
     const onHomeUpdate = (data: HomeState) => {
-      queryClient.setQueryData<HomeState>(["homeState", data.homeId], data);
+      queryClient.setQueryData<HomeState>(
+        queryKeys.homeState(data.homeId),
+        data
+      );
     };
 
     const onAlert = (payload: {homeId: string; alert: Alert}) => {
       queryClient.setQueryData<HomeState>(
-        ["homeState", payload.homeId],
+        queryKeys.homeState(payload.homeId),
         (prev) => {
           if (!prev) return prev;
+
           return {
             ...prev,
             alerts: [payload.alert, ...prev.alerts].slice(0, 20),
@@ -58,11 +66,13 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+
     socket.on("connect_error", (err) => {
       setWsStatus("offline");
+
       if (err?.message === "Unauthorized") {
         authStorage.clear();
-        // window.location.href = "/login";
+        window.location.reload();
       }
     });
 
@@ -86,7 +96,6 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
 
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.off("connect_error", onConnectError);
       socket.off("home:update", onHomeUpdate);
       socket.off("alert:new", onAlert);
       socket.io.off("reconnect_attempt", onReconnectAttempt);
@@ -97,7 +106,8 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
   }, [queryClient]);
 
   useEffect(() => {
-    queryClient.invalidateQueries({queryKey: ["homeState", homeId]});
+    queryClient.invalidateQueries({queryKey: queryKeys.homeState(homeId)});
+
     const socket = socketRef.current;
     const prevHomeId = prevHomeIdRef.current;
 
@@ -105,6 +115,7 @@ export function useHomeSocket(homeId: string, queryClient: QueryClient) {
       if (prevHomeId !== homeId) {
         socket.emit("unsubscribe:home", prevHomeId);
       }
+
       socket.emit("subscribe:home", homeId);
     }
 

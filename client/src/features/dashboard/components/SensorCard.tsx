@@ -1,4 +1,4 @@
-import type {Sensor} from "../types/home.type";
+import type {Sensor} from "../../../types/home";
 
 type SensorCardProps = {
   sensor: Sensor;
@@ -6,7 +6,7 @@ type SensorCardProps = {
 
 const SensorCard = ({sensor}: SensorCardProps) => {
   return (
-    <div className="card" >
+    <div className="card">
       <header
         style={{
           display: "flex",
@@ -15,18 +15,20 @@ const SensorCard = ({sensor}: SensorCardProps) => {
         }}
       >
         <h3 style={{margin: 0, fontSize: "1.1em"}}>{sensor.name}</h3>
+
         <span
           className="muted"
           aria-label={sensor.online ? "Online" : "Offline"}
           title={sensor.online ? "Online" : "Offline"}
           style={{display: "flex", alignItems: "center"}}
         >
-          {sensor.online ? "🟢" : "🔴"}{" "}
+          {sensor.online ? "🟢" : "🔴"}
           <span style={{marginLeft: 4}}>
             {sensor.online ? "Online" : "Offline"}
           </span>
         </span>
       </header>
+
       <div
         style={{
           fontSize: 26,
@@ -38,6 +40,7 @@ const SensorCard = ({sensor}: SensorCardProps) => {
       >
         {sensor.value} {sensor.unit}
       </div>
+
       <footer>
         <div className="muted" style={{fontSize: 12, marginTop: 6}}>
           lastSeen: {new Date(sensor.lastSeen).toLocaleTimeString()}

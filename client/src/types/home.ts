@@ -4,18 +4,29 @@ export type Sensor = {
   unit: string;
   online: boolean;
   lastSeen: number;
-}
+};
+
 export type Door = {
   name: string;
   state: "open" | "closed";
   online: boolean;
   lastSeen: number;
-}
+};
+
 export type Alarm = {
   armed: boolean;
   triggered: boolean;
-}
-  export type HomeState = {
+};
+
+export type Alert = {
+  id: string;
+  type: "TEMP_FRIDGE_HIGH" | "DOOR_OPEN_TOO_LONG";
+  message: string;
+  severity: "info" | "warning" | "critical";
+  createdAt: number;
+};
+
+export type HomeState = {
   homeId: string;
   updatedAt: number;
   sensors: Record<string, Sensor>;
@@ -24,12 +35,4 @@ export type Alarm = {
     alarm: Alarm;
   };
   alerts: Alert[];
-}
-
-export type Alert = {
-  id: string;
-  type: "TEMP_FRIDGE_HIGH" | "DOOR_OPEN_TOO_LONG";
-  message: string;
-  severity: "info" | "warning" | "critical";
-  createdAt: number;
-}
+};

@@ -1,4 +1,4 @@
-import {useReducer} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {
   Line,
   LineChart,
@@ -23,34 +23,34 @@ function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString();
 }
 
-type Action = {type: "push"; value: number};
-
-function reducer(state: Point[], action: Action): Point[] {
-  if (action.type !== "push") return state;
-
-  const ts = Date.now();
-  const next = [...state, {t: ts, time: formatTime(ts), value: action.value}];
-  return next.filter((p)=>ts-p.t<=60_000)
-}
-
 export function LiveChart({title, value}: LiveChartProps) {
-  const [data, dispatch] = useReducer(reducer, []);
+  const [data, setData] = useState<Point[]>([]);
 
-  const last = data[data.length - 1]?.value;
+  useEffect(() => {
+    const ts = Date.now();
 
-  const values = data.map((p) => p.value);
-  const min = values.length ? Math.min(...values) : value;
-  const max = values.length ? Math.max(...values) : value;
+    setData((prev) => {
+      const next = [...prev, {t: ts, time: formatTime(ts), value}];
+      return next.filter((point) => ts - point.t <= 60_000);
+    });
+  }, [value]);
 
-  if (last !== value) {
-    dispatch({type: "push", value});
-  }
+  const {min, max} = useMemo(() => {
+    const values = data.map((point) => point.value);
+
+    return {
+      min: values.length ? Math.min(...values) : value,
+      max: values.length ? Math.max(...values) : value,
+    };
+  }, [data, value]);
 
   return (
     <div className="card">
       <div style={{display: "flex", justifyContent: "space-between", gap: 10}}>
         <strong>{title}</strong>
-        <span className="muted">min {min.toFixed(1)} • max {max.toFixed(1)}</span>
+        <span className="muted">
+          min {min.toFixed(1)} • max {max.toFixed(1)}
+        </span>
       </div>
 
       <div style={{height: 220, marginTop: 12}}>

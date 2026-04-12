@@ -1,32 +1,31 @@
 import {Router} from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { Role } from "./homeAccess";
-
+import {Role} from "./homeAccess";
 
 const router = Router();
 
 type User = {
-    id: string;
-    login: string;
-    passHash: string;
-    role: Role;
-    homes: string[];
-}
+  id: string;
+  login: string;
+  passHash: string;
+  role: Role;
+  homes: string[];
+};
 
 // MVP users (ETAP 3 -> DB)
 const USERS: User[] = [
   {
     id: "u1",
     login: "user",
-    passHash: "$2b$10$VkVudAAXfwhjfoH4W4.daO4/HQUDqwLsUc6wS6YYw/qhsFAhCftwq",
+    passHash: "$2b$10$MLNNFRito7Nwuf7YTMItBuCz4xKMUqmGj2kYRAkVZQBgnYdYYd/FG",
     role: "user",
     homes: ["123"],
   },
   {
     id: "a1",
     login: "admin",
-    passHash: "$2b$10$VbNY3iPxuu5vs51J1O4AZOuECkiCy/kKk60oDxtaSyEt9hPUcGVlu",
+    passHash: "$2b$10$LFV7UbIr14ntlPoSGFxcJ.Kajkgmtqw9lUp13r4MQD5nMGeMw4PIm",
     role: "admin",
     homes: ["123", "456"],
   },
@@ -34,10 +33,11 @@ const USERS: User[] = [
 
 router.post("/login", async (req, res) => {
   const {login, password} = req.body;
- if(!login || !password) return res.status(400).json({message: "Missing login or password"});
+  if (!login || !password)
+    return res.status(400).json({message: "Missing login or password"});
 
   const user = USERS.find((u) => u.login === login);
- 
+
   if (!user) return res.status(401).json({message: "Invalid credentials"});
 
   const ok = await bcrypt.compare(password, user.passHash);
