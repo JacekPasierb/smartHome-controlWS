@@ -10,7 +10,7 @@ import {useAlarmAudio} from "../hooks/useAlarmAudio";
 import {authStorage} from "../../auth/storage/authStorage";
 import type {HomeState} from "../../../types/home";
 import {queryKeys} from "../../../lib/queryKeys";
-import { LiveChart } from "../components/LiveCharts";
+import { LiveChart } from "../components/LiveChart";
 
 const HOMES = [
   {id: "123", label: "Home A (123)"},

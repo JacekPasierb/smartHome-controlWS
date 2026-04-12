@@ -1,9 +1,9 @@
-import http from "http";
-import app from "./app";
-import {getHomeState, startSimulator} from "./store/homeStore";
-import {Server} from "socket.io";
-import {setupSocket} from "./ws/setupSocket";
 import "dotenv/config";
+import http from "http";
+import {Server} from "socket.io";
+import app from "./app";
+import {getHomeState, startSimulator} from "./home/homeStore";
+import {setupSocket} from "./ws/setupSocket";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
@@ -14,14 +14,13 @@ const io = new Server(httpServer, {
     origin: "http://localhost:5173",
   },
 });
+
 setupSocket(io, {
   onSubscribe: (socket, homeId) => {
-    // wysłanie snapshot zaraz po subskrypcji
     socket.emit("home:update", getHomeState(homeId));
   },
 });
 
-// start simulator przyjmuje callback który jest wywoływany kiedy stan domu się zmienia
 startSimulator(
   (homeId) => {
     io.to(`home:${homeId}`).emit("home:update", getHomeState(homeId));

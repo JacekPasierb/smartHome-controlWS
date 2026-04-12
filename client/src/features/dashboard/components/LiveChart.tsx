@@ -25,7 +25,7 @@ function formatTime(ts: number) {
 
 export function LiveChart({title, value}: LiveChartProps) {
   const [data, setData] = useState<Point[]>([]);
-
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const ts = Date.now();
 
@@ -53,8 +53,8 @@ export function LiveChart({title, value}: LiveChartProps) {
         </span>
       </div>
 
-      <div style={{height: 220, marginTop: 12}}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{marginTop: 12}}>
+        <ResponsiveContainer width="100%" height={220}>
           <LineChart data={data}>
             <XAxis dataKey="time" hide />
             <YAxis

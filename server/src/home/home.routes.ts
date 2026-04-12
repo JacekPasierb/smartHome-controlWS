@@ -1,5 +1,5 @@
 import {Router, Response, NextFunction} from "express";
-import {getHomeState, setAlarmArmed} from "../store/homeStore";
+import {getHomeState, setAlarmArmed} from "./homeStore";
 import {authRequired, AuthRequest} from "../auth/auth.middleware";
 import {canAccessHome} from "../auth/homeAccess";
 
