@@ -10,6 +10,8 @@ import {
 import {queryKeys} from "../../../lib/queryKeys";
 import type {HomeState} from "../../../types/home";
 import type {HomeSettings} from "../../../types/settings";
+import {useToast} from "../../../components/toast/ToastProvider";
+import { SettingsPanelSkeleton } from "./SettingsPanelSkeleton";
 
 type SettingsPanelProps = {
   homeId: string;
@@ -17,6 +19,7 @@ type SettingsPanelProps = {
 
 export function SettingsPanel({homeId}: SettingsPanelProps) {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   const {
     data: settings,
@@ -153,6 +156,20 @@ export function SettingsPanel({homeId}: SettingsPanelProps) {
             updatedSettings.security.doorOpenTooLongSeconds,
         },
       });
+
+      showToast({
+        variant: "success",
+        title: "Settings saved",
+        description: `Configuration for home ${homeId} has been updated.`,
+      });
+    },
+
+    onError: () => {
+      showToast({
+        variant: "error",
+        title: "Save failed",
+        description: "Could not update settings. Please try again.",
+      });
     },
   });
 
@@ -161,7 +178,7 @@ export function SettingsPanel({homeId}: SettingsPanelProps) {
   };
 
   if (isLoading) {
-    return <div className="card">Loading settings...</div>;
+    return <SettingsPanelSkeleton />;
   }
 
   if (isError || !settings) {
@@ -282,11 +299,40 @@ export function SettingsPanel({homeId}: SettingsPanelProps) {
           >
             {mutation.isPending ? "Saving..." : "Save settings"}
           </button>
-
-          {mutation.isSuccess && <span className="muted">✅ Saved</span>}
-          {mutation.isError && (
-            <span className="loginError">❌ Failed to save settings</span>
-          )}
+          <button
+            className="btn-small"
+            type="button"
+            onClick={() =>
+              settings &&
+              reset({
+                sensors: {
+                  temp_fridge: {
+                    name: settings.sensors.temp_fridge.name,
+                    max: settings.sensors.temp_fridge.max ?? 8,
+                  },
+                  temp_balcony: {
+                    name: settings.sensors.temp_balcony.name,
+                  },
+                  temp_room: {
+                    name: settings.sensors.temp_room.name,
+                  },
+                  humidity_room: {
+                    name: settings.sensors.humidity_room.name,
+                  },
+                  power_total: {
+                    name: settings.sensors.power_total.name,
+                  },
+                },
+                security: {
+                  doorOpenTooLongSeconds:
+                    settings.security.doorOpenTooLongSeconds,
+                },
+              })
+            }
+            disabled={mutation.isPending || !isDirty}
+          >
+            Reset
+          </button>
         </div>
       </form>
     </div>

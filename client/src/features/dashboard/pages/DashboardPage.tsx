@@ -1,4 +1,5 @@
-import { useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {useToast} from "../../../components/toast/ToastProvider";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchHomeState, setAlarm} from "../api/homeApi";
 import SensorCard from "../components/SensorCard";
@@ -10,7 +11,9 @@ import {authStorage} from "../../auth/storage/authStorage";
 import type {HomeState} from "../../../types/home";
 import {queryKeys} from "../../../lib/queryKeys";
 import {LiveChart} from "../components/LiveChart";
-import { SettingsPanel } from "../../settings/components/SettingsPanel";
+import {SettingsPanel} from "../../settings/components/SettingsPanel";
+import { Bell, BellOff, LogOut, Shield, Radio } from "lucide-react";
+import { DashboardSkeleton } from "../components/DashboardSkeleton";
 
 const ALL_HOMES = [
   {id: "123", label: "Home A (123)"},
@@ -27,8 +30,11 @@ const getWsStatusText = (status: "connecting" | "online" | "offline") => {
 
 function DashboardPage() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
+  const lastAlertIdRef = useRef<string | null>(null);
   const user = authStorage.getUser();
 
+  
   const availableHomes = useMemo(() => {
     if (!user) return [];
     return ALL_HOMES.filter((home) => user.homes.includes(home.id));
@@ -111,6 +117,29 @@ function DashboardPage() {
     window.location.reload();
   };
 
+  useEffect(() => {
+    const latestAlert = home?.alerts[0];
+
+    if (!latestAlert) return;
+
+    if (lastAlertIdRef.current === latestAlert.id) return;
+
+    if (lastAlertIdRef.current !== null) {
+      showToast({
+        variant:
+          latestAlert.severity === "critical"
+            ? "error"
+            : latestAlert.severity === "warning"
+            ? "warning"
+            : "info",
+        title: latestAlert.type,
+        description: latestAlert.message,
+      });
+    }
+
+    lastAlertIdRef.current = latestAlert.id;
+  }, [home?.alerts, showToast]);
+
   if (!user) {
     return <div style={{padding: 24}}>Missing user session</div>;
   }
@@ -119,9 +148,9 @@ function DashboardPage() {
     return <div style={{padding: 24}}>No homes assigned to this account</div>;
   }
 
-  if (isLoading) {
-    return <div style={{padding: 24}}>Loading...</div>;
-  }
+ if (isLoading) {
+   return <DashboardSkeleton />;
+ }
 
   if (isError || !home) {
     return <div style={{padding: 24}}>Error loading data</div>;
@@ -146,11 +175,12 @@ function DashboardPage() {
           }}
         >
           <button
-            className="btn-small"
+            className="btn-small btnIcon"
             onClick={toggleSound}
             title="Enable sound alerts"
           >
-            {soundEnabled ? "🔔 Sound ON" : "🔕 Sound OFF"}
+            {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+            <span>{soundEnabled ? "Sound ON" : "Sound OFF"}</span>
           </button>
 
           <button
@@ -175,21 +205,14 @@ function DashboardPage() {
             ))}
           </select>
 
-          <button className="btn-small" onClick={handleLogout}>
-            Logout
+          <button className="btn-small btnIcon" onClick={handleLogout}>
+            <LogOut size={16} />
+            <span>Logout</span>
           </button>
 
-          <div className="badge">
-            <span
-              className={`dot ${
-                wsStatus === "online"
-                  ? "dot-online"
-                  : wsStatus === "connecting"
-                  ? "dot-connecting"
-                  : "dot-offline"
-              }`}
-            />
-            {getWsStatusText(wsStatus)}
+          <div className={`badge realtimeBadge realtime-${wsStatus}`}>
+            <Radio size={15} />
+            <span>{getWsStatusText(wsStatus)}</span>
           </div>
         </div>
       </div>
@@ -271,7 +294,10 @@ function DashboardPage() {
                     : "Arm Alarm"
                 }
               >
-                🛡️ Arm
+                <>
+                  <Shield size={16} />
+                  <span>Arm</span>
+                </>
               </button>
 
               <button
@@ -284,7 +310,10 @@ function DashboardPage() {
                     : "Disarm alarm"
                 }
               >
-                🔴 Disarm
+                <>
+                  <Shield size={16} />
+                  <span>Disarm</span>
+                </>
               </button>
 
               {alarmMutation.isPending && (

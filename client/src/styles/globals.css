@@ -53,10 +53,10 @@ gap:16px;
 }
 
 .h1 {
-  font-size: 30px;
+  font-size: 32px;
   margin: 0;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: -0.4px;
 }
 
 .sub {
@@ -86,11 +86,12 @@ gap:16px;
 }
 
 .panelTitle {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.9px;
   margin-bottom: 14px;
   color: var(--muted);
+   font-weight: 700;
 }
 
 .cardsGrid {
@@ -332,4 +333,391 @@ gap:16px;
 .input:focus {
   border-color: rgba(99,102,241,0.7);
   box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+
+.toastViewport {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: grid;
+  gap: 12px;
+  z-index: 9999;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.toast {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  color: rgba(255,255,255,0.92);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+  animation: fadeIn 0.2s ease;
+}
+
+.toast-success {
+  border-left: 4px solid rgba(34,197,94,0.85);
+}
+
+.toast-error {
+  border-left: 4px solid rgba(239,68,68,0.85);
+}
+
+.toast-warning {
+  border-left: 4px solid rgba(245,158,11,0.85);
+}
+
+.toast-info {
+  border-left: 4px solid rgba(59,130,246,0.85);
+}
+
+.toastDescription {
+  margin-top: 6px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.72);
+}
+
+.toastClose {
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.btnIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.realtimeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.realtime-online {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.realtime-connecting {
+  border-color: rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.realtime-offline {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.sensorCard {
+  position: relative;
+  overflow: hidden;
+}
+
+.sensorCardAlert {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.08);
+}
+
+.sensorCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sensorCardTitleWrap {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sensorCardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.88);
+  flex-shrink: 0;
+}
+
+.sensorCardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.sensorCardMeta {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sensorValue {
+  margin-top: 18px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-align: left;
+}
+
+.sensorValue span {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.sensorFooter {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.sensorAlertBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.securityGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.securityCard {
+  display: grid;
+  gap: 14px;
+}
+
+.securityCardCritical {
+  border-color: rgba(239, 68, 68, 0.36);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+}
+
+.securityCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.securityTitle {
+  display: block;
+  text-align: left;
+  font-size: 15px;
+}
+
+.securityMeta {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.securityStateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.securityStateBadge.isOpen {
+  background: rgba(245, 158, 11, 0.1);
+  color: rgba(253, 224, 71, 0.95);
+  border-color: rgba(245, 158, 11, 0.24);
+}
+
+.securityStateBadge.isClosed {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgba(134, 239, 172, 0.95);
+  border-color: rgba(34, 197, 94, 0.24);
+}
+
+.securityStateBadge.isCritical {
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(252, 165, 165, 0.95);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.securityStateBadge.isArmed {
+  background: rgba(99, 102, 241, 0.12);
+  color: rgba(165, 180, 252, 0.95);
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.securityStateBadge.isDisarmed {
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(226, 232, 240, 0.92);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.securityLastSeen,
+.securityStatusText {
+  text-align: left;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.12),
+    transparent
+  );
+  animation: skeletonShimmer 1.4s infinite;
+}
+
+@keyframes skeletonShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeletonTitle {
+  width: 280px;
+  max-width: 70vw;
+  height: 34px;
+  border-radius: 14px;
+}
+
+.skeletonText {
+  width: 180px;
+  height: 14px;
+  margin-top: 10px;
+}
+
+.skeletonButton {
+  width: 110px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.skeletonSelect {
+  width: 140px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.skeletonBadge {
+  width: 170px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.skeletonBanner {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.skeletonPanelTitle {
+  width: 120px;
+  height: 12px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.skeletonSensorTop {
+  width: 100%;
+  height: 42px;
+}
+
+.skeletonSensorValue {
+  width: 120px;
+  height: 38px;
+  margin-top: 18px;
+}
+
+.skeletonSensorMeta {
+  width: 110px;
+  height: 13px;
+  margin-top: 14px;
+}
+
+.skeletonChip {
+  width: 84px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.skeletonChart {
+  width: 100%;
+  height: 220px;
+}
+
+.skeletonSecurityTop {
+  width: 100%;
+  height: 42px;
+}
+
+.skeletonAlertTop {
+  width: 100%;
+  height: 20px;
+}
+
+.skeletonSectionTitle {
+  width: 120px;
+  height: 18px;
+}
+
+.skeletonLabel {
+  width: 140px;
+  height: 12px;
+}
+
+.skeletonInput {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+  .skeletonTitle {
+    width: 220px;
+    height: 28px;
+  }
+
+  .skeletonButton,
+  .skeletonSelect,
+  .skeletonBadge {
+    width: 100px;
+  }
 }
