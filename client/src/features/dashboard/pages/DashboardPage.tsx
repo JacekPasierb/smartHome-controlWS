@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {useToast} from "../../../components/toast/ToastProvider";
+import {useToast} from "../../../components/toast/useToast";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchHomeState, setAlarm} from "../api/homeApi";
 import SensorCard from "../components/SensorCard";

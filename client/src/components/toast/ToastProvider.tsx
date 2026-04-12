@@ -1,26 +1,5 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-
-type ToastVariant = "success" | "error" | "info" | "warning";
-
-type ToastItem = {
-  id: string;
-  title: string;
-  description?: string;
-  variant: ToastVariant;
-};
-
-type ToastContextValue = {
-  showToast: (toast: Omit<ToastItem, "id">) => void;
-};
-
-const ToastContext = createContext<ToastContextValue | null>(null);
+import {useCallback, useMemo, useState, type ReactNode} from "react";
+import {ToastContext, type ToastItem} from "./toast.context";
 
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
@@ -88,14 +67,4 @@ export function ToastProvider({children}: {children: ReactNode}) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const context = useContext(ToastContext);
-
-  if (!context) {
-    throw new Error("useToast must be used within ToastProvider");
-  }
-
-  return context;
 }

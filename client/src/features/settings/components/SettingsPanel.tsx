@@ -10,7 +10,7 @@ import {
 import {queryKeys} from "../../../lib/queryKeys";
 import type {HomeState} from "../../../types/home";
 import type {HomeSettings} from "../../../types/settings";
-import {useToast} from "../../../components/toast/ToastProvider";
+import {useToast} from "../../../components/toast/useToast";
 import { SettingsPanelSkeleton } from "./SettingsPanelSkeleton";
 
 type SettingsPanelProps = {

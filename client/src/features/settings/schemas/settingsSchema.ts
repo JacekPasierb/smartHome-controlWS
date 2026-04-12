@@ -4,7 +4,7 @@ export const settingsSchema = z.object({
   sensors: z.object({
     temp_fridge: z.object({
       name: z.string().min(1, "Nazwa lodówki jest wymagana"),
-      max: z.coerce.number().min(-50).max(100),
+      max: z.number().min(-50).max(100),
     }),
     temp_balcony: z.object({
       name: z.string().min(1, "Nazwa balkonu jest wymagana"),
@@ -20,7 +20,7 @@ export const settingsSchema = z.object({
     }),
   }),
   security: z.object({
-    doorOpenTooLongSeconds: z.coerce.number().min(1).max(600),
+    doorOpenTooLongSeconds: z.number().min(1).max(600),
   }),
 });
 

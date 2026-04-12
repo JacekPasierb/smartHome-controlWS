@@ -14,30 +14,29 @@ type SensorCardProps = {
   sensor: Sensor;
 };
 
-function getSensorIcon(name: string) {
+function renderSensorIcon(name: string) {
   const normalized = name.toLowerCase();
 
   if (normalized.includes("lodówka")) {
-    return Refrigerator;
+    return <Refrigerator size={18} />;
   }
 
   if (normalized.includes("wilgot")) {
-    return Droplets;
+    return <Droplets size={18} />;
   }
 
   if (normalized.includes("mocy") || normalized.includes("power")) {
-    return Zap;
+    return <Zap size={18} />;
   }
 
   if (normalized.includes("balkon") || normalized.includes("pokój")) {
-    return Thermometer;
+    return <Thermometer size={18} />;
   }
 
-  return Activity;
+  return <Activity size={18} />;
 }
 
 const SensorCard = ({sensor}: SensorCardProps) => {
-  const Icon = getSensorIcon(sensor.name);
   const isAlert =
     sensor.unit === "°C" &&
     typeof sensor.value === "number" &&
@@ -47,9 +46,7 @@ const SensorCard = ({sensor}: SensorCardProps) => {
     <div className={`card sensorCard ${isAlert ? "sensorCardAlert" : ""}`}>
       <header className="sensorCardHeader">
         <div className="sensorCardTitleWrap">
-          <div className="sensorCardIcon">
-            <Icon size={18} />
-          </div>
+          <div className="sensorCardIcon">{renderSensorIcon(sensor.name)}</div>
 
           <div>
             <h3 className="sensorCardTitle">{sensor.name}</h3>
