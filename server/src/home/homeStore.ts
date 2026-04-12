@@ -1,8 +1,10 @@
 import type {Alert, HomeState} from "./homeTypes";
+import {getHomeSettings} from "../settings/settingsStore";
 
 const now = () => Date.now();
 
 function createHomeState(homeId: string): HomeState {
+  const settings = getHomeSettings(homeId);
   const ts = now();
 
   return {
@@ -10,35 +12,35 @@ function createHomeState(homeId: string): HomeState {
     updatedAt: ts,
     sensors: {
       temp_fridge: {
-        name: "Lodówka",
+        name: settings.sensors.temp_fridge.name,
         value: 4.2,
         unit: "°C",
         online: true,
         lastSeen: ts,
       },
       temp_balcony: {
-        name: "Balkon",
+        name: settings.sensors.temp_balcony.name,
         value: 18.5,
         unit: "°C",
         online: true,
         lastSeen: ts,
       },
       temp_room: {
-        name: "Pokój",
+        name: settings.sensors.temp_room.name,
         value: 21.2,
         unit: "°C",
         online: true,
         lastSeen: ts,
       },
       humidity_room: {
-        name: "Wilgotność",
+        name: settings.sensors.humidity_room.name,
         value: 45.3,
         unit: "%",
         online: true,
         lastSeen: ts,
       },
       power_total: {
-        name: "Pobór mocy",
+        name: settings.sensors.power_total.name,
         value: 320,
         unit: "W",
         online: true,
@@ -108,6 +110,16 @@ function markUpdated(home: HomeState, onUpdate?: (homeId: string) => void) {
   onUpdate?.(home.homeId);
 }
 
+function syncSensorNamesWithSettings(home: HomeState) {
+  const settings = getHomeSettings(home.homeId);
+
+  home.sensors.temp_fridge.name = settings.sensors.temp_fridge.name;
+  home.sensors.temp_balcony.name = settings.sensors.temp_balcony.name;
+  home.sensors.temp_room.name = settings.sensors.temp_room.name;
+  home.sensors.humidity_room.name = settings.sensors.humidity_room.name;
+  home.sensors.power_total.name = settings.sensors.power_total.name;
+}
+
 const doorOpenedAt: Record<string, number | null> = {};
 
 export function startSimulator(
@@ -116,12 +128,20 @@ export function startSimulator(
 ) {
   setInterval(() => {
     Object.values(homes).forEach((home) => {
+      syncSensorNamesWithSettings(home);
+      const settings = getHomeSettings(home.homeId);
       const sensors = home.sensors;
+     
 
       sensors.temp_fridge.value = Number(rand(2, 10).toFixed(1));
       sensors.temp_fridge.lastSeen = now();
 
-      if (sensors.temp_fridge.value > 8) {
+      
+      const fridgeMax = settings.sensors.temp_fridge.max;
+      if (
+        typeof fridgeMax === "number" &&
+        sensors.temp_fridge.value > fridgeMax
+      ) {
         const alert: Alert = {
           id: uid(),
           type: "TEMP_FRIDGE_HIGH",
@@ -152,6 +172,7 @@ export function startSimulator(
 
   setInterval(() => {
     Object.values(homes).forEach((home) => {
+      syncSensorNamesWithSettings(home);
       const door = home.security.door_main;
 
       if (Math.random() < 0.3) {
@@ -171,6 +192,7 @@ export function startSimulator(
 
   setInterval(() => {
     Object.values(homes).forEach((home) => {
+      syncSensorNamesWithSettings(home);
       const door = home.security.door_main;
 
       if (door.state === "open") {
@@ -183,7 +205,10 @@ export function startSimulator(
 
         const secondsOpen = (now() - openedAt) / 1000;
 
-        if (secondsOpen > 10) {
+        const settings = getHomeSettings(home.homeId);
+        const maxDoorOpenSeconds = settings.security.doorOpenTooLongSeconds;
+
+        if (secondsOpen > maxDoorOpenSeconds) {
           const alert: Alert = {
             id: uid(),
             type: "DOOR_OPEN_TOO_LONG",
@@ -204,6 +229,7 @@ export function startSimulator(
 
   setInterval(() => {
     Object.values(homes).forEach((home) => {
+      syncSensorNamesWithSettings(home);
       const alarm = home.security.alarm;
       const door = home.security.door_main;
 

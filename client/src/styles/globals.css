@@ -319,3 +319,17 @@ gap:16px;
   font-size: 13px;
   margin-top: 12px;
 }
+
+.input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+  outline: none;
+}
+
+.input:focus {
+  border-color: rgba(99,102,241,0.7);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}

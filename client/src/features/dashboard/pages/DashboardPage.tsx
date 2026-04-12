@@ -10,6 +10,7 @@ import {authStorage} from "../../auth/storage/authStorage";
 import type {HomeState} from "../../../types/home";
 import {queryKeys} from "../../../lib/queryKeys";
 import {LiveChart} from "../components/LiveChart";
+import { SettingsPanel } from "../../settings/components/SettingsPanel";
 
 const ALL_HOMES = [
   {id: "123", label: "Home A (123)"},
@@ -296,7 +297,7 @@ function DashboardPage() {
               alarm={home.security.alarm}
             />
           </div>
-
+          {user.role === "admin" && <SettingsPanel homeId={homeId} />}
           <div className="panel">
             <h2 className="panelTitle">Alerts</h2>
             <AlertsFeed alerts={home.alerts} />
