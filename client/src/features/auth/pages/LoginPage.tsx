@@ -25,6 +25,7 @@ const LoginPage = () => {
     try {
       const response = await login(data);
       authStorage.setToken(response.accessToken);
+      authStorage.setUser(response.user);
       window.location.reload();
     } catch (error) {
       setError("root", {

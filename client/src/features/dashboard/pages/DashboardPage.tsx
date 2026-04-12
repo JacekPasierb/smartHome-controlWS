@@ -1,23 +1,21 @@
-import {useState} from "react";
+import { useMemo, useState} from "react";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchHomeState, setAlarm} from "../api/homeApi";
 import SensorCard from "../components/SensorCard";
 import {SecurityCard} from "../components/SecurityCard";
 import {AlertsFeed} from "../components/AlertsFeed";
-
 import {useHomeSocket} from "../hooks/useHomeSocket";
 import {useAlarmAudio} from "../hooks/useAlarmAudio";
 import {authStorage} from "../../auth/storage/authStorage";
 import type {HomeState} from "../../../types/home";
 import {queryKeys} from "../../../lib/queryKeys";
-import { LiveChart } from "../components/LiveChart";
+import {LiveChart} from "../components/LiveChart";
 
-const HOMES = [
+const ALL_HOMES = [
   {id: "123", label: "Home A (123)"},
   {id: "456", label: "Home B (456)"},
 ] as const;
 
-type HomeId = (typeof HOMES)[number]["id"];
 type ChartSensorId = "temp_fridge" | "temp_balcony" | "temp_room";
 
 const getWsStatusText = (status: "connecting" | "online" | "offline") => {
@@ -28,9 +26,28 @@ const getWsStatusText = (status: "connecting" | "online" | "offline") => {
 
 function DashboardPage() {
   const queryClient = useQueryClient();
-  const [homeId, setHomeId] = useState<HomeId>("123");
+  const user = authStorage.getUser();
+
+  const availableHomes = useMemo(() => {
+    if (!user) return [];
+    return ALL_HOMES.filter((home) => user.homes.includes(home.id));
+  }, [user]);
+
+  const [selectedHomeId, setSelectedHomeId] = useState<string>("");
   const [chartSensorId, setChartSensorId] =
     useState<ChartSensorId>("temp_fridge");
+
+  const homeId = useMemo(() => {
+    if (!availableHomes.length) return "";
+
+    const hasAccess = availableHomes.some((home) => home.id === selectedHomeId);
+
+    if (hasAccess) {
+      return selectedHomeId;
+    }
+
+    return availableHomes[0].id;
+  }, [availableHomes, selectedHomeId]);
 
   const {wsStatus} = useHomeSocket(homeId, queryClient);
 
@@ -41,6 +58,7 @@ function DashboardPage() {
   } = useQuery<HomeState>({
     queryKey: queryKeys.homeState(homeId),
     queryFn: () => fetchHomeState(homeId),
+    enabled: Boolean(user && homeId),
   });
 
   const triggered = Boolean(home?.security.alarm.triggered);
@@ -92,9 +110,21 @@ function DashboardPage() {
     window.location.reload();
   };
 
-  if (isLoading) return <div style={{padding: 24}}>Loading...</div>;
-  if (isError || !home)
+  if (!user) {
+    return <div style={{padding: 24}}>Missing user session</div>;
+  }
+
+  if (!availableHomes.length) {
+    return <div style={{padding: 24}}>No homes assigned to this account</div>;
+  }
+
+  if (isLoading) {
+    return <div style={{padding: 24}}>Loading...</div>;
+  }
+
+  if (isError || !home) {
     return <div style={{padding: 24}}>Error loading data</div>;
+  }
 
   return (
     <div className="container">
@@ -134,10 +164,10 @@ function DashboardPage() {
           <select
             className="select"
             value={homeId}
-            onChange={(e) => setHomeId(e.target.value as HomeId)}
+            onChange={(e) => setSelectedHomeId(e.target.value)}
             title="Choose home"
           >
-            {HOMES.map((homeOption) => (
+            {availableHomes.map((homeOption) => (
               <option key={homeOption.id} value={homeOption.id}>
                 {homeOption.label}
               </option>

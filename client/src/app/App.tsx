@@ -3,7 +3,10 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 
 function App() {
-  const isAuthed = Boolean(authStorage.getToken());
+  const token = authStorage.getToken();
+  const user = authStorage.getUser();
+
+  const isAuthed = Boolean(token && user);
 
   return isAuthed ? <DashboardPage /> : <LoginPage />;
 }
