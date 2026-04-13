@@ -1,0 +1,11 @@
+
+services:
+  server:
+    build:
+      context: ./server
+    container_name: smarthome-server-container
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./server/.env
+    restart: unless-stopped
