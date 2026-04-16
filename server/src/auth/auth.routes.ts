@@ -1,7 +1,9 @@
-import {Router} from "express";
+import {Response, Router} from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import {Role} from "./homeAccess";
+import { AUTH_COOKIE_NAME } from "./auth.constants";
+import { AuthRequest, authRequired } from "./auth.middleware";
 
 const router = Router();
 
@@ -31,6 +33,18 @@ const USERS: User[] = [
   },
 ];
 
+function getCookieOptions() {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    path: "/",
+    maxAge: 2 * 60 * 60 * 1000,
+  };
+}
+
 router.post("/login", async (req, res) => {
   const {login, password} = req.body;
   if (!login || !password)
@@ -49,14 +63,45 @@ router.post("/login", async (req, res) => {
     {expiresIn: "2h"}
   );
 
+   res.cookie(AUTH_COOKIE_NAME, accessToken, getCookieOptions());
+
   return res.json({
-    accessToken,
     user: {
       id: user.id,
       role: user.role,
       homes: user.homes,
     },
   });
+});
+
+
+router.get("/me", authRequired, (req: AuthRequest, res: Response) => {
+  const currentUser = USERS.find((user) => user.id === req.user?.id);
+
+  if (!currentUser) {
+    return res.status(404).json({message: "User not found"});
+  }
+
+  return res.json({
+    user: {
+      id: currentUser.id,
+      role: currentUser.role,
+      homes: currentUser.homes,
+    },
+  });
+});
+
+router.post("/logout", (_req, res: Response) => {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    path: "/",
+  });
+
+  return res.json({success: true});
 });
 
 export default router;

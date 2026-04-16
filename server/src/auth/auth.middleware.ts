@@ -1,6 +1,7 @@
 import {Request, Response, NextFunction} from "express";
 import jwt from "jsonwebtoken";
 import type {Role} from "./homeAccess";
+import { AUTH_COOKIE_NAME } from "./auth.constants";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -15,8 +16,10 @@ export const authRequired = (
   next: NextFunction
 ) => {
   const header = req.headers.authorization || "";
-  const [, token] = header.split(" ");
-
+   const [, bearerToken] = header.split(" ");
+  const cookieToken = req.cookies?.[AUTH_COOKIE_NAME] as string | undefined;
+  const token = cookieToken || bearerToken;
+  
   if (!token) {
     return res.status(401).json({message: "Missing token"});
   }
