@@ -24,7 +24,6 @@ const LoginPage = () => {
   const onSubmit = async (data: FormValues) => {
     try {
       const response = await login(data);
-      authStorage.setToken(response.accessToken);
       authStorage.setUser(response.user);
       window.location.reload();
     } catch (error) {

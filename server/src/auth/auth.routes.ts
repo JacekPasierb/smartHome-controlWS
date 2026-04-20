@@ -34,12 +34,12 @@ const USERS: User[] = [
 ];
 
 function getCookieOptions() {
-  
+  const isProduction = process.env.NODE_ENV === "production";
 
   return {
     httpOnly: true,
-    secure: true,
-    sameSite: "none" as const,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
     path: "/",
     maxAge: 2 * 60 * 60 * 1000,
   };
@@ -96,8 +96,8 @@ router.post("/logout", (_req, res: Response) => {
 
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none" as const,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
     path: "/",
   });
 

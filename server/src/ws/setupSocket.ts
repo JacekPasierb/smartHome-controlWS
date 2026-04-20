@@ -1,6 +1,6 @@
 import type {Server, Socket} from "socket.io";
 import {canAccessHome} from "../auth/homeAccess";
-import {SocketUser, verifySocketToken} from "./socketAuth";
+import {SocketUser, verifySocketTokenFromCookie} from "./socketAuth";
 
 type AuthedSocket = Socket & {user?: SocketUser};
 
@@ -13,8 +13,8 @@ export function setupSocket(
 ) {
   io.use((socket: AuthedSocket, next) => {
     try {
-      const token = socket.handshake.auth?.token as string | undefined;
-      socket.user = verifySocketToken(token);
+      const cookieHeader = socket.handshake.headers.cookie;
+      socket.user = verifySocketTokenFromCookie(cookieHeader);
       next();
     } catch {
       next(new Error("Unauthorized"));
@@ -27,6 +27,7 @@ export function setupSocket(
         socket.emit("error: forbidden", {homeId});
         return;
       }
+
       socket.join(`home:${homeId}`);
       opts?.onSubscribe?.(socket, homeId);
       socket.emit("subscribed:home", {homeId});

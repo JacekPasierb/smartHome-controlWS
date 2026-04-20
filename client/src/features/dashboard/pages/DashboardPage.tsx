@@ -14,6 +14,7 @@ import {LiveChart} from "../components/LiveChart";
 import {SettingsPanel} from "../../settings/components/SettingsPanel";
 import { Bell, BellOff, LogOut, Shield, Radio } from "lucide-react";
 import { DashboardSkeleton } from "../components/DashboardSkeleton";
+import { logout } from "../../auth/api/authApi";
 
 const ALL_HOMES = [
   {id: "123", label: "Home A (123)"},
@@ -112,9 +113,13 @@ function DashboardPage() {
     },
   });
 
-  const handleLogout = () => {
-    authStorage.clear();
-    window.location.reload();
+  const handleLogout = async () => {
+      try {
+        await logout();
+      } finally {
+        authStorage.clear();
+        window.location.reload();
+      }
   };
 
   useEffect(() => {
